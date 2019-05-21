@@ -3,7 +3,7 @@
 
 ## Project Setup
 File->New...->C++ PRoject
-	Project name.
+	Project name. IMPORTANT: name length must be less than 8 characters
 	Project type->Makefile project
 	Toolchain->--Other Toolchain--
 	Next->

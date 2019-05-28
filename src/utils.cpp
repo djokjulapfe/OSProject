@@ -56,7 +56,7 @@ void exit_thread() {
 	dispatch();
 }
 
-void init_timer() {
+void inic() {
 	asm {
 		cli
 		push es

@@ -6,6 +6,7 @@
  */
 
 #include <iostream.h>
+#include <stdio.h>
 #include "utils.h"
 #include "PCB.h"
 #include "SCHEDULE.H"
@@ -45,7 +46,7 @@ void interrupt timer() {
 
 void dispatch() {
 	lock;
-	cout << "Dispatching...\n";
+//	cout << "Dispatching...\n";
 	cswitch_demanded = 1;
 	timer();
 	unlock;

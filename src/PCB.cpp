@@ -42,9 +42,12 @@ PCB* PCB::create_pcb(void (*body)(), unsigned int time_slice = 2, unsigned long 
 	newPCB->ss = FP_SEG(st + stack_size - 12);
 	newPCB->sp = FP_OFF(st + stack_size - 12);
 
-	printf("New stack\n");
-	printf("%04x%04x\n", newPCB->ss, newPCB->sp);
-	printf("%08lx\n", st);
+//	cout << "New stack\n";
+//	cout << "   " << hex << newPCB->ss << newPCB->sp << endl;;
+//	cout << st << endl;
+//	printf("New stack:\n");
+//	printf("%04x%04x\n", newPCB->ss, newPCB->sp);
+//	printf("%08lx\n", st);
 
 	newPCB->finished = 0;
 	newPCB->stack = st;

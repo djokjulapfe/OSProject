@@ -9,7 +9,6 @@
 #define TESTS_H_
 
 void test_all();
-void test_interrupts();
 void test_dispatch_system();
 void test_thread();
 void test_semaphore();

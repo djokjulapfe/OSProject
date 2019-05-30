@@ -34,6 +34,13 @@ PCB::~PCB() {
 }
 
 PCB* PCB::create_pcb(void (*body)(), unsigned int time_slice = 2, unsigned long stack_size = 4096) {
+	if (stack_size > 64<<10) {
+		lock;
+		cout << stack_size << " is too large for a stack, reverting to 64K";
+		unlock;
+		stack_size = 64<<10;
+	}
+
 	PCB* newPCB = new PCB();
 
 //	cout << "Stack Size: " << stack_size << endl;

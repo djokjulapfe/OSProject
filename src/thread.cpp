@@ -41,7 +41,6 @@ ID Thread::getRunningId() {
 	return PCB::running->id;
 }
 
-Thread *getThreadById(ID id) {
-	// TODO: implement this
-	return 0;
+Thread *Thread::getThreadById(ID id) {
+	return threads.find(id);
 }

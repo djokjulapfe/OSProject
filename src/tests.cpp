@@ -13,6 +13,7 @@
 #include "SCHEDULE.h"
 #include "utils.h"
 #include "list.h"
+#include "thread.h"
 
 int userMain(int argc, const char* argv[]) {
 	test_all();
@@ -29,6 +30,7 @@ void test_all() {
 //	test_dispatch_system();
 	test_thread();
 	test_semaphore();
+
 	test_events();
 	test_signals();
 	// TODO: add test_deadlock();
@@ -120,6 +122,11 @@ void TestThreadCount::run() {
 		lock;
 		cout << "There are currently " << threads.count() << " active threads!\n";
 		threads.print_state();
+		cout << "Thread 5 ";
+		if (Thread::getThreadById(5) == 0)
+			cout << "not found";
+		else
+			cout << "found";
 		cout << endl;
 		unlock;
 		dispatch();

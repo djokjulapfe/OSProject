@@ -8,20 +8,25 @@
 #ifndef PCB_H_
 #define PCB_H_
 
-struct PCB {
+#include "thread.h"
+
+class PCB {
+public:
 	unsigned *stack;
+	Thread* owner;
 	unsigned ss;
 	unsigned sp;
 	unsigned finished;
 	int timeQuantum;
-	unsigned id;
-
-	// TODO: check if stack_size is a thread_create argument
-	static unsigned long default_stack_size;
-
-	static PCB* create_pcb(void (*body)(), unsigned int time_slice, unsigned long stack_size);
+	int id;
 
 	~PCB();
+
+	static PCB* create_pcb(void (*body)(), unsigned int time_slice, unsigned long stack_size);
+	static void wrapper();
+	static PCB* running;
+	static PCB* mainPCB;
+	static unsigned maxId;
 };
 
 #endif /* PCB_H_ */

@@ -7,10 +7,9 @@
 
 #include <dos.h>
 #include "PCB.h"
+#include "utils.h"
 #include <iostream.h>
 #include <stdio.h>
-
-unsigned long PCB::default_stack_size=1024;
 
 //void PCB::create_process(PCB *newPCB, void (*body)()) {
 //	unsigned *st = new unsigned[PCB::default_stack_size];
@@ -26,6 +25,14 @@ unsigned long PCB::default_stack_size=1024;
 //	newPCB->stack = st;
 //}
 
+PCB* PCB::mainPCB = 0;
+PCB* PCB::running = 0;
+unsigned PCB::maxId = 0;
+
+PCB::~PCB() {
+	delete[] stack;
+}
+
 PCB* PCB::create_pcb(void (*body)(), unsigned int time_slice = 2, unsigned long stack_size = 4096) {
 	PCB* newPCB = new PCB();
 
@@ -37,7 +44,7 @@ PCB* PCB::create_pcb(void (*body)(), unsigned int time_slice = 2, unsigned long 
 	st[stack_size - 2] = FP_SEG(body);
 	st[stack_size - 3] = FP_OFF(body);
 
-	unsigned *stack_pointer = st + stack_size - 12;
+//	unsigned *stack_pointer = st + stack_size - 12;
 
 	newPCB->ss = FP_SEG(st + stack_size - 12);
 	newPCB->sp = FP_OFF(st + stack_size - 12);
@@ -52,10 +59,12 @@ PCB* PCB::create_pcb(void (*body)(), unsigned int time_slice = 2, unsigned long 
 	newPCB->finished = 0;
 	newPCB->stack = st;
 	newPCB->timeQuantum = time_slice;
+	newPCB->id = PCB::maxId++;
 
 	return newPCB;
 }
 
-PCB::~PCB() {
-	delete[] stack;
+void PCB::wrapper() {
+	PCB::running->owner->run();
+	exit_thread();
 }

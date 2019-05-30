@@ -15,25 +15,39 @@ unsigned tss;
 unsigned tsp;
 
 void interrupt timer() {
-	if (!cswitch_demanded) cntr--;
-	if (cntr == 0 || cswitch_demanded) {
+//	lock;
+//	cout << running_countdown << endl;
+//	unlock;
+	if (!cswitch_demanded && running_countdown >= 0) running_countdown--;
+	if (running_countdown == 0 || cswitch_demanded) {
+//		lock;
+//		cout << "Context switch\n";
+//		unlock;
+
 		asm {
 			mov tss, ss
 			mov tsp, sp
 		}
 
-		running->ss = tss;
-		running->sp = tsp;
+		PCB::running->ss = tss;
+		PCB::running->sp = tsp;
 
-		if (!running->finished) Scheduler::put(running);
-		running = Scheduler::get();
-		if (running == 0) running = mainPCB;
-//		running = getNextPCBToExecute();
+//		lock;
+//		cout << "From " << PCB::running->id << "\n";
+//		unlock;
 
-		tss = running->ss;
-		tsp = running->sp;
+		if (!PCB::running->finished/* && PCB::running->id != 0*/) Scheduler::put(PCB::running);
+		PCB::running = Scheduler::get();
+		if (PCB::running == 0) PCB::running = PCB::mainPCB;
 
-		cntr = running->timeQuantum;
+//		lock;
+//		cout << "To   " << PCB::running->id << "\n";
+//		unlock;
+
+		tss = PCB::running->ss;
+		tsp = PCB::running->sp;
+
+		running_countdown = PCB::running->timeQuantum;
 
 		asm {
 			mov ss, tss
@@ -46,18 +60,17 @@ void interrupt timer() {
 
 void dispatch() {
 	lock;
-//	cout << "Dispatching...\n";
 	cswitch_demanded = 1;
 	timer();
 	unlock;
 }
 
 void exit_thread() {
-	running->finished = 1;
+	PCB::running->finished = 1;
 	dispatch();
 }
 
-void inic() {
+void init_timer() {
 	asm {
 		cli
 		push es
@@ -67,17 +80,12 @@ void inic() {
 		mov es, ax
 
 		mov ax, word ptr es:0022h
-		mov word ptr oldTimerSeg, ax
+		mov word ptr es:0182h, ax
 		mov ax, word ptr es:0020h
-		mov word ptr oldTimerOff, ax
+		mov word ptr es:0180h, ax
 
 		mov word ptr es:0022h, seg timer
 		mov word ptr es:0020h, offset timer
-
-		mov ax, oldTimerSeg
-		mov word ptr es:0182h, ax
-		mov ax, oldTimerOff
-		mov word ptr es:0180h, ax
 
 		pop ax
 		pop es
@@ -85,7 +93,7 @@ void inic() {
 	}
 }
 
-void restore() {
+void restore_timer() {
 	asm {
 		cli
 		push es
@@ -94,9 +102,9 @@ void restore() {
 		mov ax, 0
 		mov es, ax
 
-		mov ax, word ptr oldTimerSeg
+		mov ax, word ptr es:0182h
 		mov word ptr es:0022h, ax
-		mov ax, word ptr oldTimerOff
+		mov ax, word ptr es:0180h
 		mov word ptr es:0020h, ax
 
 		pop ax

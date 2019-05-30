@@ -9,22 +9,23 @@
 #define UTILS_H_
 
 // TODO: use stackable locks
-#define lock asm cli
-#define unlock asm sti
+#define lock asm {\
+	pushf;\
+	cli;\
+}
+#define unlock asm popf
 
 struct PCB;
-extern volatile unsigned cntr, cswitch_demanded;
-extern PCB* p[3];
-extern PCB* running;
-extern PCB* mainPCB;
+class ThreadList;
 
-extern unsigned oldTimerOff, oldTimerSeg;
+extern volatile unsigned running_countdown, cswitch_demanded;
+//extern ThreadList threads;
 
 void interrupt timer();
 void dispatch();
 void exit_thread();
 
-void inic();
-void restore();
+void init_timer();
+void restore_timer();
 
 #endif /* UTILS_H_ */

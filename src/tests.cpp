@@ -14,26 +14,28 @@
 #include "utils.h"
 #include "list.h"
 #include "thread.h"
+#include "kernsem.h"
 
 int userMain(int argc, const char* argv[]) {
 	test_all();
-	lock;
-	cout << threads.count() << endl;
-	unlock;
-	getchar();
 	return 0;
+}
+
+void tick() {
+//	lock;
+//	cout << "t\n";
+//	unlock;
 }
 
 void test_all() {
 
-//	test_dispatch_system();
-//	test_dispatch_system();
-	test_thread();
+//	test_PCB();
+//	test_thread();
+	test_kernelsem();
 	test_semaphore();
-
 	test_events();
 	test_signals();
-	// TODO: add test_deadlock();
+	test_deadlock();
 }
 
 unsigned Na = 10;
@@ -56,7 +58,7 @@ void test_b() {
 		lock;
 		cout << "in b(), i = " << i << endl;
 		unlock;
-//		delay(Db);
+//		delay(Db);k4
 		dispatch();
 	}
 	exit_thread();
@@ -64,9 +66,9 @@ void test_b() {
 
 PCB* test_p[2];
 
-void test_dispatch_system() {
+void test_PCB() {
 	lock;
-	cout << "Testing dispatch system.\n";
+	cout << "Testing PCB and dispatch system.\n";
 
 	running_countdown = 5;
 
@@ -213,9 +215,86 @@ void test_thread() {
 	unlock;
 }
 
+KernelSem test_ksem_producer(0), test_ksem_consumer(2), test_ksem_main(0);
+
+int test_buffer[2];
+int test_buffer_index;
+
+void test_producer() {
+	for (int i = 0; i < 10; i++) {
+//		lock;
+//		cout << "Producer " << PCB::running->id << " waiting\n";
+//		unlock;
+		test_ksem_consumer.wait();
+		lock;
+		test_buffer[test_buffer_index] = i;
+		test_buffer_index = (test_buffer_index + 1) % 2;
+		cout << "Produced " << i << endl;
+		test_ksem_producer.signal();
+		unlock;
+	}
+	lock;
+	cout << "A producer finished\n";
+	unlock;
+	exit_thread();
+}
+
+void test_consumer() {
+	int local_sum;
+	for (int i = 0; i < 10; i++) {
+//		lock;
+//		cout << "Consumer " << PCB::running->id << " waiting\n";
+//		unlock;
+		test_ksem_producer.wait();
+		test_ksem_producer.wait();
+		lock;
+		local_sum += test_buffer[0] + test_buffer[1];
+		cout << "Consumed\n";
+		unlock;
+		test_ksem_consumer.signal(2);
+	}
+	lock;
+	cout << "The sum is " << local_sum << endl;
+	unlock;
+	test_ksem_main.signal();
+	exit_thread();
+}
+
+void test_kernelsem() {
+	lock;
+	cout << "Testing kernel level semaphores.\n";
+
+	running_countdown = 1;
+
+	PCB *p1, *p2, *c;
+	p1 = PCB::create_pcb(test_producer, 2, 4096);
+	p2 = PCB::create_pcb(test_producer, 2, 4096);
+	c = PCB::create_pcb(test_consumer, 2, 4096);
+
+	Scheduler::put(p1);
+	Scheduler::put(p2);
+	Scheduler::put(c);
+
+	unlock;
+
+	lock;
+	cout << "Main waiting on main semaphore\n";
+	unlock;
+	test_ksem_main.wait();
+	lock;
+	cout << "Someone called test_ksem_main.signal()\n";
+	unlock;
+
+	delete p1;
+	delete p2;
+	delete c;
+}
+
 void test_semaphore() {}
 
 void test_events() {}
 
 void test_signals() {}
+
+void test_deadlock() {}
 

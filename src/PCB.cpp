@@ -34,11 +34,11 @@ PCB::~PCB() {
 }
 
 PCB* PCB::create_pcb(void (*body)(), unsigned int time_slice = 2, unsigned long stack_size = 4096) {
-	if (stack_size > 64<<10) {
+	if (stack_size > (64l << 10)) {
 		lock;
-		cout << stack_size << " is too large for a stack, reverting to 64K";
+		cout << stack_size << " is too large for a stack, reverting to 64K\n";
 		unlock;
-		stack_size = 64<<10;
+		stack_size = 64l << 10;
 	}
 
 	PCB* newPCB = new PCB();
@@ -64,6 +64,7 @@ PCB* PCB::create_pcb(void (*body)(), unsigned int time_slice = 2, unsigned long 
 //	printf("%08lx\n", st);
 
 	newPCB->finished = 0;
+	newPCB->paused = 0;
 	newPCB->stack = st;
 	newPCB->timeQuantum = time_slice;
 	newPCB->id = PCB::maxId++;

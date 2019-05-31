@@ -9,10 +9,12 @@
 #define TESTS_H_
 
 void test_all();
-void test_dispatch_system();
+void test_PCB();
 void test_thread();
+void test_kernelsem();
 void test_semaphore();
 void test_events();
 void test_signals();
+void test_deadlock();
 
 #endif /* TESTS_H_ */

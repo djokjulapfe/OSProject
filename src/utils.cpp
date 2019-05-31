@@ -36,7 +36,7 @@ void interrupt timer() {
 //		cout << "From " << PCB::running->id << "\n";
 //		unlock;
 
-		if (!PCB::running->finished/* && PCB::running->id != 0*/) Scheduler::put(PCB::running);
+		if (!PCB::running->finished && !PCB::running->paused /* && PCB::running->id != 0*/) Scheduler::put(PCB::running);
 		PCB::running = Scheduler::get();
 		if (PCB::running == 0) PCB::running = PCB::mainPCB;
 
@@ -54,8 +54,12 @@ void interrupt timer() {
 			mov sp, tsp
 		}
 	}
-	if (!cswitch_demanded) asm int 60h;
+	if (!cswitch_demanded) {
+		tick();
+		asm int 60h;
+	}
 	cswitch_demanded = 0;
+	cswitch_schedule = 1;
 }
 
 void dispatch() {

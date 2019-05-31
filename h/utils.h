@@ -18,8 +18,9 @@
 struct PCB;
 class ThreadList;
 
-extern volatile unsigned running_countdown, cswitch_demanded;
-//extern ThreadList threads;
+extern volatile unsigned running_countdown, cswitch_demanded, cswitch_schedule;
+extern void tick();
+extern volatile unsigned long total_time;
 
 void interrupt timer();
 void dispatch();

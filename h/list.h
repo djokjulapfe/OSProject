@@ -105,6 +105,81 @@ private:
 
 extern ThreadList threads;
 
+class PCBList {
+private:
+	struct PCBListElement {
+		PCBListElement(PCB *elem) {
+			next = 0;
+			data = elem;
+		}
+		PCBListElement *next;
+		PCB *data;
+	};
+
+public:
+	PCBList() {
+		head = tail = 0;
+	}
+
+	void add(PCB*elem) {
+		if (head == 0) {
+			head = tail = new PCBListElement(elem);
+			return;
+		}
+		PCBListElement *new_item = new PCBListElement(elem);
+		tail->next = new_item;
+		tail = new_item;
+	}
+
+	void remove(PCB *elem) {
+		if (head == 0) return;
+		if (head->data == elem) {
+			if (tail == head) tail = 0;
+			PCBListElement *tmp = head;
+			head = head->next;
+			delete tmp;
+			return;
+		}
+		PCBListElement *it = head;
+		while (it->next != tail) {
+			if (it->next->data == elem) {
+				PCBListElement *tmp = it->next;
+				it->next = tmp->next;
+				if (tail == tmp) tail = it;
+				delete tmp;
+				return;
+			}
+			it = it->next;
+		}
+		if (tail->data == elem) {
+			PCBListElement *tmp = tail;
+			tail = it;
+			delete tmp;
+			tail->next = 0;
+		}
+		return;
+	}
+
+	PCB* pop() {
+		if (tail == 0) return 0;
+		if (head == tail) {
+			PCB *ret = head->data;
+			delete head;
+			head = tail = 0;
+			return ret;
+		}
+		PCBListElement *tmp = head;
+		head = head->next;
+		PCB *ret = tmp->data;
+		delete tmp;
+		return ret;
+	}
+
+private:
+	PCBListElement *head;
+	PCBListElement *tail;
+};
+
 
 // doubly linked list
 

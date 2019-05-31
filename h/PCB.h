@@ -17,6 +17,7 @@ public:
 	unsigned ss;
 	unsigned sp;
 	unsigned finished;
+	unsigned paused;
 	int timeQuantum;
 	int id;
 

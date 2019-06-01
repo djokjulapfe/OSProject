@@ -17,7 +17,6 @@ class PCB {
 public:
 	unsigned *stack;
 	Thread *owner;
-	KernelSem *waiter;
 	unsigned ss;
 	unsigned sp;
 	unsigned finished;

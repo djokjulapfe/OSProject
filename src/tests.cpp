@@ -15,6 +15,7 @@
 #include "list.h"
 #include "thread.h"
 #include "kernsem.h"
+#include "semaphor.h"
 
 int userMain(int argc, const char* argv[]) {
 	test_all();
@@ -29,9 +30,9 @@ void tick() {
 
 void test_all() {
 
-	test_PCB();
-	test_thread();
-	test_kernelsem();
+//	test_PCB();
+//	test_thread();
+//	test_kernelsem();
 	test_semaphore();
 	test_events();
 	test_signals();
@@ -293,7 +294,84 @@ void test_kernelsem() {
 	delete c;
 }
 
-void test_semaphore() {}
+class TestThreadProducer : public Thread {
+public:
+	TestThreadProducer(StackSize stackSize = defaultStackSize, Time timeSlice = defaultTimeSlice);
+	virtual void run();
+
+	static volatile Semaphore sem;
+	static volatile int products[2];
+	static volatile int next_product_index;
+};
+
+class TestThreadConsumer : public Thread {
+public:
+	TestThreadConsumer(StackSize stackSize = defaultStackSize, Time timeSlice = defaultTimeSlice);
+	virtual void run();
+
+	static volatile Semaphore sem;
+	static volatile int result;
+};
+
+volatile Semaphore TestThreadProducer::sem(0);
+volatile Semaphore TestThreadConsumer::sem(2);
+volatile int TestThreadConsumer::result = 0;
+volatile int TestThreadProducer::next_product_index = 0;
+volatile int TestThreadProducer::products[2];
+
+TestThreadProducer tp1, tp2;
+TestThreadConsumer tc;
+volatile Semaphore test_sem_main(0);
+
+TestThreadProducer::TestThreadProducer(StackSize stackSize, Time timeSlice) : Thread(stackSize, timeSlice) {
+}
+
+void TestThreadProducer::run() {
+	for (int i = 0; i < 9; i++) {
+		TestThreadConsumer::sem.wait(0);
+		lock;
+		products[next_product_index] = i;
+		next_product_index = (next_product_index + 1) % 2;
+		cout << "Produced " << i << endl;
+		sem.signal();
+		unlock;
+	}
+}
+
+TestThreadConsumer::TestThreadConsumer(StackSize stackSize, Time timeSlice) : Thread(stackSize, timeSlice) {
+}
+
+void TestThreadConsumer::run() {
+	for (int i = 0; i < 10; i++) {
+		if (TestThreadProducer::sem.wait(2) == 0) cout << "Waited too long!\n";
+		if (TestThreadProducer::sem.wait(2) == 0) cout << "Waited too long!\n";
+		lock;
+		result += test_buffer[0] + test_buffer[1];
+		cout << "Consumed\n";
+		unlock;
+		sem.signal(2);
+	}
+	test_sem_main.signal();
+}
+
+void test_semaphore() {
+	lock;
+	cout << "Testing semaphores";
+	unlock;
+
+	tp1.start();
+	tp2.start();
+	tc.start();
+
+	lock;
+	cout << "Main waiting on main semaphore\n";
+	unlock;
+	test_sem_main.wait(0);
+	lock;
+	cout << "Someone called test_ksem_main.signal()\n";
+	cout << "Totoal time " << total_time << endl;
+	unlock;
+}
 
 void test_events() {}
 

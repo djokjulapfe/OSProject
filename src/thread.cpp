@@ -24,7 +24,9 @@ void Thread::start() {
 }
 
 void Thread::waitToComplete() {
-	while(!myPCB->finished);
+	while(!myPCB->finished) {
+		dispatch();
+	}
 }
 
 Thread::~Thread() {

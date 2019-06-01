@@ -6,10 +6,11 @@
  */
 
 #include <dos.h>
-#include "PCB.h"
+#include "SCHEDULE.H"
 #include "utils.h"
 #include <iostream.h>
 #include <stdio.h>
+#include "PCB.h"
 
 //void PCB::create_process(PCB *newPCB, void (*body)()) {
 //	unsigned *st = new unsigned[PCB::default_stack_size];
@@ -26,6 +27,7 @@
 //}
 
 PCB* PCB::mainPCB = 0;
+PCB* PCB::waitPCB = 0;
 PCB* PCB::running = 0;
 unsigned PCB::maxId = 0;
 
@@ -74,5 +76,26 @@ PCB* PCB::create_pcb(void (*body)(), unsigned int time_slice = 2, unsigned long 
 
 void PCB::wrapper() {
 	PCB::running->owner->run();
+	exit_thread();
+}
+
+void PCB::wait_for_sleepers() {
+	lock;
+	cout << "Starting to wait... \n";
+	unlock;
+	while(sleeping.get_head_restore_time() != -1) {
+		while(total_time < sleeping.get_head_restore_time());
+		lock;
+		while(sleeping.has_head() && total_time >= sleeping.get_head_restore_time()) {
+			PCB *tmp = sleeping.pop();
+			tmp->paused = 2; // woke up
+			Scheduler::put(tmp);
+		}
+		unlock;
+		dispatch();
+	}
+	lock;
+	cout << "No sleepers left\n";
+	unlock;
 	exit_thread();
 }

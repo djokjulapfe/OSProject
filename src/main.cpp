@@ -18,6 +18,7 @@ volatile unsigned cswitch_demanded;
 volatile unsigned cswitch_schedule;
 volatile unsigned running_countdown;
 ThreadList threads;
+PCBList sleeping;
 volatile unsigned long total_time; // x 55ms
 
 extern int userMain(int argc, const char* argv[]);
@@ -33,6 +34,9 @@ int main(int argc, const char* argv[]) {
 	PCB::mainPCB->id = 0;
 	PCB::maxId++;
 	PCB::running = PCB::mainPCB;
+
+	PCB::waitPCB = PCB::create_pcb(PCB::wait_for_sleepers, 1, 4096);
+	PCB::waitPCB->paused = 1;
 
 	init_timer();
 

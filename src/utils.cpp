@@ -36,9 +36,17 @@ void interrupt timer() {
 //		cout << "From " << PCB::running->id << "\n";
 //		unlock;
 
-		if (!PCB::running->finished && !PCB::running->paused /* && PCB::running->id != 0*/) Scheduler::put(PCB::running);
+		if (!PCB::running->finished && PCB::running->paused != 1 /* && PCB::running->id != 0*/) Scheduler::put(PCB::running);
 		PCB::running = Scheduler::get();
-		if (PCB::running == 0) PCB::running = PCB::mainPCB;
+		if (PCB::running == 0) {
+//			lock;
+//			cout << "LAST STAND " << sleeping.has_head() << "\n";
+//			unlock;
+			if (sleeping.has_head())
+				PCB::running = PCB::waitPCB;
+			else PCB::running = PCB::mainPCB;
+//			PCB::running = PCB::mainPCB;
+		}
 
 //		lock;
 //		cout << "To   " << PCB::running->id << "\n";
@@ -55,7 +63,7 @@ void interrupt timer() {
 		}
 	}
 	if (!cswitch_demanded) {
-		tick();
+		kernel_tick();
 		asm int 60h;
 	}
 	cswitch_demanded = 0;
@@ -72,6 +80,11 @@ void dispatch() {
 void exit_thread() {
 	PCB::running->finished = 1;
 	dispatch();
+}
+
+void kernel_tick() {
+	total_time++;
+	tick();
 }
 
 void init_timer() {

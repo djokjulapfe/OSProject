@@ -9,6 +9,7 @@
 #define H_LIST_H_
 
 #include <iostream.h>
+#include "utils.h"
 
 class ThreadList {
 private:
@@ -108,12 +109,14 @@ extern ThreadList threads;
 class PCBList {
 private:
 	struct PCBListElement {
-		PCBListElement(PCB *elem) {
+		PCBListElement(PCB *elem, int rt = -1) {
 			next = 0;
 			data = elem;
+			restore_time = rt;
 		}
 		PCBListElement *next;
 		PCB *data;
+		unsigned long restore_time;
 	};
 
 public:
@@ -121,7 +124,7 @@ public:
 		head = tail = 0;
 	}
 
-	void add(PCB*elem) {
+	void add(PCB *elem) {
 		if (head == 0) {
 			head = tail = new PCBListElement(elem);
 			return;
@@ -131,8 +134,54 @@ public:
 		tail = new_item;
 	}
 
+	void add_sleeper(PCB *elem, unsigned long sleep_amount) {
+		Time wakeup_time = total_time + sleep_amount;
+		PCBListElement *add = new PCBListElement(elem, wakeup_time);
+		if (head == 0) {
+			head = tail = add;
+			return;
+		}
+		if (head == tail) {
+			if (head->restore_time < wakeup_time) {
+				tail = add;
+			} else {
+				head = add;
+			}
+			head->next = tail;
+			return;
+		}
+		if (head->restore_time > wakeup_time) {
+			add->next = head;
+			head = add;
+			return;
+		}
+		PCBListElement *it = head;
+		while (it->next != 0 && it->next->restore_time < wakeup_time) it = it->next;
+		if (it->next == 0) {
+			it->next = add;
+			tail = add;
+		}
+		add->next = it->next;
+		it->next = add;
+	}
+
+	int get_head_restore_time() {
+		if (head == 0) return -1;
+		else return head->restore_time;
+	}
+
+	int has_head() {
+		if (head == 0) return 0;
+		else return 1;
+	}
+
 	void remove(PCB *elem) {
 		if (head == 0) return;
+		if (head == tail) {
+			delete head;
+			head = tail = 0;
+			return;
+		}
 		if (head->data == elem) {
 			if (tail == head) tail = 0;
 			PCBListElement *tmp = head;
@@ -179,7 +228,6 @@ private:
 	PCBListElement *head;
 	PCBListElement *tail;
 };
-
 
 // doubly linked list
 

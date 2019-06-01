@@ -29,8 +29,8 @@ void tick() {
 
 void test_all() {
 
-//	test_PCB();
-//	test_thread();
+	test_PCB();
+	test_thread();
 	test_kernelsem();
 	test_semaphore();
 	test_events();
@@ -221,7 +221,7 @@ int test_buffer[2];
 int test_buffer_index;
 
 void test_producer() {
-	for (int i = 0; i < 10; i++) {
+	for (int i = 0; i < 9; i++) {
 //		lock;
 //		cout << "Producer " << PCB::running->id << " waiting\n";
 //		unlock;
@@ -242,11 +242,11 @@ void test_producer() {
 void test_consumer() {
 	int local_sum;
 	for (int i = 0; i < 10; i++) {
-//		lock;
-//		cout << "Consumer " << PCB::running->id << " waiting\n";
-//		unlock;
-		test_ksem_producer.wait();
-		test_ksem_producer.wait();
+		lock;
+		cout << "Consumer " << PCB::running->id << " waiting\n";
+		unlock;
+		if (test_ksem_producer.wait(2) == 0) cout << "Waited too long!\n";
+		if (test_ksem_producer.wait(2) == 0) cout << "Waited too long!\n";
 		lock;
 		local_sum += test_buffer[0] + test_buffer[1];
 		cout << "Consumed\n";
@@ -271,6 +271,8 @@ void test_kernelsem() {
 	p2 = PCB::create_pcb(test_producer, 2, 4096);
 	c = PCB::create_pcb(test_consumer, 2, 4096);
 
+	cout << "p1, p2, c = " << p1->id << ", " << p2->id << ", " << c->id << endl;
+
 	Scheduler::put(p1);
 	Scheduler::put(p2);
 	Scheduler::put(c);
@@ -283,6 +285,7 @@ void test_kernelsem() {
 	test_ksem_main.wait();
 	lock;
 	cout << "Someone called test_ksem_main.signal()\n";
+	cout << "Totoal time " << total_time << endl;
 	unlock;
 
 	delete p1;

@@ -9,15 +9,19 @@
 #define PCB_H_
 
 #include "thread.h"
+#include "list.h"
+
+class KernelSem;
 
 class PCB {
 public:
 	unsigned *stack;
-	Thread* owner;
+	Thread *owner;
+	KernelSem *waiter;
 	unsigned ss;
 	unsigned sp;
 	unsigned finished;
-	unsigned paused;
+	unsigned paused; // 0 - awake, 1 - sleeping, 2 - woke up
 	int timeQuantum;
 	int id;
 
@@ -27,7 +31,11 @@ public:
 	static void wrapper();
 	static PCB* running;
 	static PCB* mainPCB;
+	static PCB* waitPCB;
+	static void wait_for_sleepers();
 	static unsigned maxId;
 };
+
+extern PCBList sleeping;
 
 #endif /* PCB_H_ */

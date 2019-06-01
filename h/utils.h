@@ -26,6 +26,7 @@ void interrupt timer();
 void dispatch();
 void exit_thread();
 
+void kernel_tick();
 void init_timer();
 void restore_timer();
 

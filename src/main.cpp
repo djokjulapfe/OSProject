@@ -13,6 +13,7 @@
 #include "SCHEDULE.H"
 #include "tests.h"
 #include "list.h"
+#include "kernev.h"
 
 volatile unsigned cswitch_demanded;
 volatile unsigned cswitch_schedule;
@@ -20,10 +21,12 @@ volatile unsigned running_countdown;
 ThreadList threads;
 PCBList sleeping;
 volatile unsigned long total_time; // x 55ms
+IVTEntry* entryList;
+volatile int waitingSwitch;
 
-extern int userMain(int argc, const char* argv[]);
+extern int userMain(int argc, char* argv[]);
 
-int main(int argc, const char* argv[]) {
+int main(int argc, char* argv[]) {
 
 	PCB::mainPCB = new PCB;
 	PCB::mainPCB->stack = 0;
@@ -43,6 +46,8 @@ int main(int argc, const char* argv[]) {
 	int ret = userMain(argc, argv);
 
 	restore_timer();
+
+	delete PCB::waitPCB;
 
 	cout << "Done, press return to continue...";
 

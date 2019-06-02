@@ -13,6 +13,7 @@ void test_PCB();
 void test_thread();
 void test_kernelsem();
 void test_semaphore();
+void test_kernelev();
 void test_events();
 void test_signals();
 void test_deadlock();

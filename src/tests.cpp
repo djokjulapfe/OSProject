@@ -9,6 +9,8 @@
 #include <dos.h>
 #include <stdio.h>
 #include "tests.h"
+
+#include "../h/Event.h"
 #include "PCB.h"
 #include "SCHEDULE.h"
 #include "utils.h"
@@ -16,24 +18,25 @@
 #include "thread.h"
 #include "kernsem.h"
 #include "semaphor.h"
+#include "kernev.h"
 
-int userMain(int argc, const char* argv[]) {
-	test_all();
-	return 0;
-}
+//int userMain(int argc, const char* argv[]) {
+//	test_all();
+//	return 0;
+//}
 
-void tick() {
+//void tick() {
 //	lock;
 //	cout << "t\n";
 //	unlock;
-}
+//}
 
 void test_all() {
-
 //	test_PCB();
 //	test_thread();
 //	test_kernelsem();
-	test_semaphore();
+//	test_semaphore();
+	test_kernelev();
 	test_events();
 	test_signals();
 	test_deadlock();
@@ -59,7 +62,7 @@ void test_b() {
 		lock;
 		cout << "in b(), i = " << i << endl;
 		unlock;
-//		delay(Db);k4
+//		delay(Db);
 		dispatch();
 	}
 	exit_thread();
@@ -356,7 +359,7 @@ void TestThreadConsumer::run() {
 
 void test_semaphore() {
 	lock;
-	cout << "Testing semaphores";
+	cout << "Testing semaphores.\n";
 	unlock;
 
 	tp1.start();
@@ -373,7 +376,38 @@ void test_semaphore() {
 	unlock;
 }
 
-void test_events() {}
+PREPAREENTRY(15, 1);
+
+void test_kernelevent_thread() {
+	for (int i = 0; i < 10; i++) {
+//		asm int 15;
+		dispatch();
+	}
+	exit_thread();
+}
+
+void test_kernelev() {
+	lock;
+	cout << "Testing kernel's implementaiton of events.\n";
+	PCB *tmp_input_thread = PCB::create_pcb(test_kernelevent_thread, 1, 4096);
+	Scheduler::put(tmp_input_thread);
+	KernelEv test_input_event(15);
+	unlock;
+	for (int i = 0; i < 10; i++) {
+		lock;
+		cout << "Waiting for event...\n";
+		unlock;
+		test_input_event.wait();
+	}
+	lock;
+	cout << "gg, wp\n";
+	unlock;
+	delete tmp_input_thread;
+}
+
+void test_events() {
+
+}
 
 void test_signals() {}
 
